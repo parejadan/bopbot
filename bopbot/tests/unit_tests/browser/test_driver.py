@@ -1,4 +1,5 @@
 import pytest
+from mock import patch, Mock
 
 from bopbot.browser.driver import (
     SupportedOS,
@@ -50,6 +51,47 @@ class TestBrowserWindow:
 
 class TestBrowserConfig:
     def test_validate_headless(self):
-        browser_config = BrowserConfig(running_os=SupportedOS.mac, xvfb_headless=True)
+        browser_config = BrowserConfig(
+            running_os=SupportedOS.mac,
+            browser_window=BrowserWindow(),
+            xvfb_headless=True,
+        )
         assert browser_config.xvfb_headless == False
         assert browser_config.native_headless == True
+
+    def test_window_flag_option(self):
+        window = BrowserWindow()
+        config = BrowserConfig(running_os=SupportedOS.linux, browser_window=window)
+        assert window.as_arg_option() in config.default_args()
+
+    def test_debug_flag_option(self):
+        config = BrowserConfig(
+            running_os=SupportedOS.linux,
+            browser_window=BrowserWindow(),
+            dev_mode=True,
+        )
+        assert "--auto-open-devtools-for-tabs" in config.default_args()
+
+    def test_creates_browser_data_path(self):
+        create_pat_mock = Mock()
+        with patch("bopbot.browser.driver.create_path", create_pat_mock):
+            config = BrowserConfig(
+                running_os=SupportedOS.linux,
+                browser_window=BrowserWindow,
+                dev_mode=True,
+            )
+        create_pat_mock.assert_called_with(path=config.browser_profile_path)
+
+    def test_chrome_process_options_defaults(self):
+        window = BrowserWindow()
+        config = BrowserConfig(
+            running_os=SupportedOS.linux,
+            browser_window=window,
+            dev_mode=True
+        )
+        chrome_process_options = config.chrome_process_options()
+        assert chrome_process_options["ignoreHTTPSError"] == True
+        assert chrome_process_options["userDataDir"] == config.browser_profile_path
+        assert chrome_process_options["ignoreDefaultArgs"] == [
+            "--enable-automation", "--mute-audio", "--hide-scrollbars",
+        ]

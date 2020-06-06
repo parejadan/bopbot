@@ -1,7 +1,15 @@
 from enum import Enum
 import random
+import os
 
 from bopbot.browser.exceptions import BrowserSetupError
+
+
+def create_path(path):
+    try:
+        os.makedirs(path, exist_ok=True, mode=0o777)
+    except Exception:
+        raise
 
 
 class SupportedOS(Enum):
@@ -40,7 +48,7 @@ class BrowserWindow:
             self.set_buffer()
 
     @property
-    def min_size(self):
+    def min_size(self) -> int:
         return 50
 
     def validate_window_sizes(self, width, height):
@@ -76,17 +84,21 @@ class BrowserWindow:
             self._set_possitive_buffer()
 
     @property
-    def view_port(self):
+    def view_port(self) -> {}:
         return {"width": self.width, "height": self.height}
+
+    def as_arg_option(self):
+        return f"--window-size={self.width},{self.height+100}"
 
 
 class BrowserConfig:
     def __init__(
         self,
         running_os: SupportedOS,
+        browser_window: BrowserWindow,
         page_load_timeout=30000,
         animation_timeout=5000,
-        debug_mode=False,
+        dev_mode=False,
         native_headless=False,
         xvfb_headless=False,
     ):
@@ -94,18 +106,22 @@ class BrowserConfig:
         Parameters
         ==========
         running_os: OS we're executing the bopbot on
+        browser_window: browser window dimensions
         page_load_timeout: miliseconds to wait for browser to load page
         animation_timeout: miliseconds to wait for JS animation to render
-        debug_mode: If true, we open browser's JS debug console
+        dev_mode: if true, we open browser's JS developer console
         """
         self.running_os = running_os
+        self.browser_window = browser_window
         self.exe_path = get_chrome_path(running_os=running_os)
         self.page_load_timeout = page_load_timeout
         self.animation_timeout = animation_timeout
+        self.dev_mode = dev_mode
         self.native_headless = native_headless
         self.xvfb_headless = xvfb_headless
         self.validate_headless()
         self.browser_profile_path = "browserData"
+        create_path(path=self.browser_profile_path)
 
     def validate_headless(self):
         """
@@ -118,5 +134,62 @@ class BrowserConfig:
             self.xvfb_headless = False
 
     @property
-    def slow_down(self):
+    def slow_down(self) -> int:
         return random.randint(1, 3)
+
+    def default_args(self) -> []:
+        process_args = [
+            '--cryptauth-http-host ""',
+            "--disable-accelerated-2d-canvas",
+            "--disable-background-networking",
+            "--disable-background-timer-throttling",
+            "--disable-browser-side-navigation",
+            "--disable-client-side-phishing-detection",
+            "--disable-default-apps",
+            "--disable-dev-shm-usage",
+            "--disable-device-discovery-notifications",
+            "--disable-extensions",
+            "--disable-features=site-per-process",
+            "--disable-hang-monitor",
+            "--disable-java",
+            "--disable-popup-blocking",
+            "--disable-prompt-on-repost",
+            "--disable-setuid-sandbox",
+            "--disable-sync",
+            "--disable-translate",
+            "--disable-web-security",
+            "--disable-webgl",
+            "--metrics-recording-only",
+            "--no-first-run",
+            "--safebrowsing-disable-auto-update",
+            "--no-sandbox",
+            # Automation arguments
+            "--password-store=basic",
+            "--use-mock-keychain",
+            "--disable-http2",
+            # allow user agent override
+            "--enable-features=NetworkService",
+            self.browser_window.as_arg_option(),
+        ]
+        if self.dev_mode:
+            process_args.append("--auto-open-devtools-for-tabs")
+
+        return process_args
+
+    def chrome_process_options(self):
+        process_args = self.default_args()
+        return {
+            "ignoreHTTPSError": True,
+            "nativeHeadless": self.native_headless,
+            "xvfbHeadless": self.xvfb_headless,
+            "slowMo": self.slow_down,
+            "userDataDir": self.browser_profile_path,
+            "logLevel": "CRITICAL",
+            "args": process_args,
+            "ignoreDefaultArgs": [
+                "--enable-automation",
+                "--mute-audio",
+                "--hide-scrollbars",
+            ],
+            "executablePath": self.exe_path,
+        }
