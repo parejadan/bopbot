@@ -1,2 +1,4 @@
+-r base.txt
+
 pytest==5.4.3
 mock==4.0.2

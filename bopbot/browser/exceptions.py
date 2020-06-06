@@ -1,0 +1,2 @@
+class BrowserSetupError(Exception):
+    pass
