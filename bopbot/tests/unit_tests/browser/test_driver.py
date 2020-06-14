@@ -6,6 +6,7 @@ from bopbot.browser.driver import (
     get_chrome_path,
     BrowserWindow,
     BrowserConfig,
+    ChromeLauncher,
 )
 from bopbot.browser.exceptions import BrowserSetupError
 
@@ -82,16 +83,62 @@ class TestBrowserConfig:
             )
         create_pat_mock.assert_called_with(path=config.browser_profile_path)
 
-    def test_chrome_process_options_defaults(self):
+    def test_chrome_launch_options_defaults(self):
         window = BrowserWindow()
         config = BrowserConfig(
             running_os=SupportedOS.linux,
             browser_window=window,
             dev_mode=True
         )
-        chrome_process_options = config.chrome_process_options()
-        assert chrome_process_options["ignoreHTTPSError"] == True
-        assert chrome_process_options["userDataDir"] == config.browser_profile_path
-        assert chrome_process_options["ignoreDefaultArgs"] == [
+        chrome_launch_options = config.chrome_launch_options()
+        assert chrome_launch_options["ignoreHTTPSErrors"] == True
+        assert chrome_launch_options["userDataDir"] == config.browser_profile_path
+        assert chrome_launch_options["ignoreDefaultArgs"] == [
             "--enable-automation", "--mute-audio", "--hide-scrollbars",
         ]
+        assert "executablePath" in chrome_launch_options
+        assert chrome_launch_options["defaultViewport"] == window.view_port
+
+
+class TestChromeLauncher:
+    def test_xvfb_launch_cmd(self):
+        browser_config = BrowserConfig(
+            running_os=SupportedOS.linux,
+            browser_window=BrowserWindow(),
+            xvfb_headless=True,
+        )
+        launcher = ChromeLauncher(chrome_config=browser_config)
+        launch_cmd = launcher._launch_cmd()
+
+        assert "xvfb-run" in launch_cmd
+        assert "--headless" not in launch_cmd
+
+    def test_native_headless_launch_cmd(self):
+        browser_config = BrowserConfig(
+            running_os=SupportedOS.mac,
+            browser_window=BrowserWindow(),
+            native_headless=True,
+        )
+        launcher = ChromeLauncher(chrome_config=browser_config)
+        launch_cmd = launcher._launch_cmd()
+
+        assert "xvfb-run" not in launch_cmd
+        assert "--headless" in launch_cmd
+
+    def test_options_sync_chrome_config(self):
+        browser_config = BrowserConfig(
+            running_os=SupportedOS.mac,
+            browser_window=BrowserWindow(),
+            native_headless=True,
+        )
+        launcher = ChromeLauncher(chrome_config=browser_config)
+        expected = browser_config.chrome_launch_options()
+        assert launcher.chromeExecutable == browser_config.exe_path
+        assert launcher.ignoreHTTPSErrors == expected["ignoreHTTPSErrors"]
+        assert f"--user-data-dir={browser_config.browser_profile_path}" in launcher.chromeArguments
+        # verify we're omiting the default arguments
+        for ignore_arg in expected["ignoreDefaultArgs"]:
+            assert ignore_arg not in launcher.chromeArguments
+        # verify the needed arguments are present
+        for required_arg in expected["args"]:
+            assert required_arg in launcher.chromeArguments

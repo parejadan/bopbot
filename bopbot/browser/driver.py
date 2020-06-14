@@ -2,6 +2,10 @@ from enum import Enum
 import random
 import os
 
+from pyppeteer import launcher
+from pyppeteer.browser import Browser
+from pyppeteer.connection import Connection
+
 from bopbot.browser.exceptions import BrowserSetupError
 
 
@@ -24,6 +28,8 @@ def get_chrome_path(running_os: SupportedOS):
         exe_path = "/usr/bin/google-chrome"
     else:
         raise BrowserSetupError(f"running_os {running_os} must be of type SupportedOS enum")
+
+    return exe_path
 
 
 class BrowserWindow:
@@ -96,7 +102,6 @@ class BrowserConfig:
         self,
         running_os: SupportedOS,
         browser_window: BrowserWindow,
-        page_load_timeout=30000,
         animation_timeout=5000,
         dev_mode=False,
         native_headless=False,
@@ -107,14 +112,12 @@ class BrowserConfig:
         ==========
         running_os: OS we're executing the bopbot on
         browser_window: browser window dimensions
-        page_load_timeout: miliseconds to wait for browser to load page
         animation_timeout: miliseconds to wait for JS animation to render
         dev_mode: if true, we open browser's JS developer console
         """
         self.running_os = running_os
         self.browser_window = browser_window
         self.exe_path = get_chrome_path(running_os=running_os)
-        self.page_load_timeout = page_load_timeout
         self.animation_timeout = animation_timeout
         self.dev_mode = dev_mode
         self.native_headless = native_headless
@@ -163,6 +166,7 @@ class BrowserConfig:
             "--no-first-run",
             "--safebrowsing-disable-auto-update",
             "--no-sandbox",
+            "--remote-debugging-port",
             # Automation arguments
             "--password-store=basic",
             "--use-mock-keychain",
@@ -176,12 +180,10 @@ class BrowserConfig:
 
         return process_args
 
-    def chrome_process_options(self):
+    def chrome_launch_options(self):
         process_args = self.default_args()
         return {
-            "ignoreHTTPSError": True,
-            "nativeHeadless": self.native_headless,
-            "xvfbHeadless": self.xvfb_headless,
+            "ignoreHTTPSErrors": True,
             "slowMo": self.slow_down,
             "userDataDir": self.browser_profile_path,
             "logLevel": "CRITICAL",
@@ -192,4 +194,87 @@ class BrowserConfig:
                 "--hide-scrollbars",
             ],
             "executablePath": self.exe_path,
+            "defaultViewport": self.browser_window.view_port,
         }
+
+
+class ChromeLauncher(launcher.Launcher):
+    def __init__(
+        self,
+        chrome_config: BrowserConfig,
+        loop=None,
+    ):
+        """
+        Parameters
+        ==========
+        chrome_config: BrowserConfig
+        loop: execution loop for chrome to use. If not set, launcher.Launcher creates one
+        """
+        options = chrome_config.chrome_launch_options()
+        options["loop"] = loop
+        super().__init__(options=options)
+        # launcher.Launcher properties
+        self.autoClose = False
+        # custom properties for inheriting class
+        self.executable_path = chrome_config.exe_path
+        self.xvfb_headless = chrome_config.xvfb_headless
+        self.native_headless = chrome_config.native_headless
+
+    def _launch_cmd(self):
+        if self.xvfb_headless:
+            cmd = [
+                "xvfb-run",
+                "--auto-servernum",
+                "-e",
+                "/dev/stdout",
+                self.executable_path
+            ]
+        elif self.native_headless:
+            cmd = [
+                self.executable_path,
+                "--headless",
+                "--disable-gpu",
+                "--hide-scrollbars",
+                "--mute-audio"
+            ]
+        else:
+            cmd = [self.executable_path]
+
+        return cmd
+
+    async def launch_chrome(self):
+        self.chromeClosed = False
+        self.connection = None
+        self.proc = subprocess.Popen(
+            self._launch_cmd(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
+        # Signal handlers for exits used to be here
+        connectionDelay = self.options.get("slowMo", 0)
+        self.browserWSEndpoint = await self._get_ws_endpoint()
+        self.connection = Connection(
+            self.browserWSEndpoint, self._loop, connectionDelay
+        )
+        return await Browser.create(
+            self.connection, self.options, self.proc, self.kill_chrome
+        )
+
+    def remove_xvfb_lock_file(self):
+        lock_file_query = "/tmp/.X*-lock"
+        lock_files_found = glob.glob(lock_file_query)
+        for lock_file in lock_files_found:
+            os.remove(lock_file)
+
+    def kill_xvfb_process(self):
+        process_name = "xvfb"
+        existing_pids = psutil.pids()
+        for pid in existing_pids:
+            process = psutil.Process(pid)
+            if process.name().lower() == process_name:
+                process.kill()
+                self.remove_xvfb_lock_file()
+                break
+
+    async def close_chrome(self):
+        await self.killChrome()
+        if self.xvfb_headless:
+            self.kill_xvfb_process()
