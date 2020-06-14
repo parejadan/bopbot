@@ -1,7 +1,7 @@
 import pytest
 from mock import patch, Mock
 
-from bopbot.browser.driver import (
+from bopbot.browser.launcher import (
     SupportedOS,
     get_chrome_path,
     BrowserWindow,
@@ -75,7 +75,7 @@ class TestBrowserConfig:
 
     def test_creates_browser_data_path(self):
         create_pat_mock = Mock()
-        with patch("bopbot.browser.driver.create_path", create_pat_mock):
+        with patch("bopbot.browser.launcher.create_path", create_pat_mock):
             config = BrowserConfig(
                 running_os=SupportedOS.linux,
                 browser_window=BrowserWindow,
