@@ -47,10 +47,7 @@ def test_flatten_selector_hierarchy():
 def test_create_labeled_selector_validates():
     validate_mock = Mock()
     hierarchy = ["body", "button"]
-    with patch(
-        target="bopbot.dom.elements.validate_dom_hierarchy",
-        new=validate_mock
-    ):
+    with patch(target="bopbot.dom.elements.validate_dom_hierarchy", new=validate_mock):
         create_labeled_selector(label="signup_button", selector_hierarchy=hierarchy)
         validate_mock.assert_called_with(dom_hierarchy=hierarchy)
 

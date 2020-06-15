@@ -17,7 +17,7 @@ def validate_dom_hierarchy(dom_hierarchy: [str]):
 def validate_label_name(label):
     if not isinstance(label, str) or not label.replace("_", "").isalpha():
         raise SelectorError(
-            f"label [{label}] must be str and only have alphabetical chars after label.replace('_', '')"
+            f"label [{label}] must be str and only have alpha chars after label.replace('_', '')"
         )
 
     return True
@@ -33,6 +33,7 @@ class BaseSelector:
     We define the js query format as 'document.querySelector("{}")'
     to assure across browser compatibility.
     """
+
     dom_connector = ">"
 
     def __init__(self, dom_hierarchy: [str]):
@@ -41,7 +42,7 @@ class BaseSelector:
                     Last element assumed to be target dom element.
         """
         self._dom_hierarchy = dom_hierarchy
-        self.query_format = "document.querySelector(\"{}\")"
+        self.query_format = 'document.querySelector("{}")'
         self._str = None
 
     @classmethod
@@ -63,7 +64,9 @@ class BaseSelector:
 
     def to_query(self, dom_hierarchy: [str] = None) -> str:
         if dom_hierarchy:
-            query_str = self.query_format.format(self.to_str(dom_hierarchy=dom_hierarchy))
+            query_str = self.query_format.format(
+                self.to_str(dom_hierarchy=dom_hierarchy)
+            )
         else:
             query_str = self.query_format.format(self.to_str())
 
@@ -87,6 +90,7 @@ class LabeledSelector(BaseSelector):
     Resource for defining dom paths with a human readable label describing
     the dom object
     """
+
     def __init__(self, label: str, dom_hierarchy: [str]):
         """
         Parameters
@@ -148,5 +152,7 @@ def add_selector_to(obj, label: str, selector_hierarchy: []):
     @label: camelcase string describing the object the passed dom path hierarchy points to
     @selector_hierarchy: DOM path that points to selector label describes
     """
-    selector = create_labeled_selector(label=label, selector_hierarchy=selector_hierarchy)
+    selector = create_labeled_selector(
+        label=label, selector_hierarchy=selector_hierarchy
+    )
     setattr(obj, label, selector)

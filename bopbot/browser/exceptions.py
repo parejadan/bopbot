@@ -4,4 +4,5 @@ class BrowserSetupError(Exception):
 
 class PageError(Exception):
     """Raised when loading page times out"""
+
     pass

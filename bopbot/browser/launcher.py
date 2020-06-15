@@ -2,6 +2,9 @@ import asyncio
 from enum import Enum
 import random
 import os
+import subprocess
+import glob
+import psutil
 
 from pyppeteer import launcher
 from pyppeteer.browser import Browser
@@ -28,17 +31,16 @@ def get_chrome_path(running_os: SupportedOS):
     elif running_os == SupportedOS.linux:
         exe_path = "/usr/bin/google-chrome"
     else:
-        raise BrowserSetupError(f"running_os {running_os} must be of type SupportedOS enum")
+        raise BrowserSetupError(
+            f"running_os {running_os} must be of type SupportedOS enum"
+        )
 
     return exe_path
 
 
 class BrowserWindow:
     def __init__(
-        self,
-        width=1200,
-        height=800,
-        use_size_buffer=True,
+        self, width=1200, height=800, use_size_buffer=True,
     ):
         """
         Parameters
@@ -198,9 +200,7 @@ class BrowserConfig:
 
 class ChromeLauncher(launcher.Launcher):
     def __init__(
-        self,
-        chrome_config: BrowserConfig,
-        loop=None,
+        self, chrome_config: BrowserConfig, loop=None,
     ):
         """
         Parameters
@@ -225,7 +225,7 @@ class ChromeLauncher(launcher.Launcher):
                 "--auto-servernum",
                 "-e",
                 "/dev/stdout",
-                self.executable_path
+                self.executable_path,
             ]
         elif self.native_headless:
             cmd = [
@@ -233,7 +233,7 @@ class ChromeLauncher(launcher.Launcher):
                 "--headless",
                 "--disable-gpu",
                 "--hide-scrollbars",
-                "--mute-audio"
+                "--mute-audio",
             ]
         else:
             cmd = [self.executable_path]

@@ -1,3 +1,4 @@
+import asyncio
 import json
 from user_agent import generate_navigator_js
 
@@ -10,7 +11,7 @@ class RawDriver:
     def __init__(
         self,
         chrome_config: BrowserConfig,
-        user_agent: str=None,
+        user_agent: str = None,
         animation_timeout=5000,
         pageload_timeout=30000,
     ):
@@ -85,7 +86,7 @@ class PageManager:
 
     async def sync_request_agent(self):
         if self.user_agent:
-            await self.page.setExtraHTTPHeaders(headers={"User-Agent": user_agent})
+            await self.page.setExtraHTTPHeaders(headers={"User-Agent": self.user_agent})
 
     async def resync_navigator(self, hard=False, use_custom_js=False):
         dump = json.dumps(self.navigator_config)

@@ -29,12 +29,12 @@ class JSLibs:
         if ".js" not in resource:
             resource = resource + ".js"
 
-        if resource in self._cache.keys() and not force_load:
+        if resource in self._cache.keys():
             return self._cache[resource]
 
         return os.path.join(BASE_DIR, lib_path, resource)
 
-    def load_lib(self, resource, lib_path="static", force_load=False):
+    def load_lib(self, resource, lib_path="static"):
         if resource in self._cache:
             return self._cache[resource]
 
@@ -44,7 +44,7 @@ class JSLibs:
                 self._cache[resource] = reader.read()
 
             return self._cache[resource]
-        except FileNotFoundError as ex:
+        except FileNotFoundError:
             error_message = "{}{}{}".format(
                 "Loading pip package resource failure. We expected",
                 f' [{os.path.join("<pip_lib_path>", lib_path, resource)}]',

@@ -26,9 +26,7 @@ class TestBrowserWindow:
     def test_set_negative_buffer(self):
         start_width, start_height = 100, 100
         browser_window = BrowserWindow(
-            width=start_width,
-            height=start_height,
-            use_size_buffer=False,
+            width=start_width, height=start_height, use_size_buffer=False,
         )
         browser_window._set_negative_buffer()
         assert start_width > browser_window.width
@@ -45,9 +43,9 @@ class TestBrowserWindow:
         with pytest.raises(BrowserSetupError):
             BrowserWindow(width=10, height=100)
         with pytest.raises(BrowserSetupError):
-                BrowserWindow(width=100, height=10)
+            BrowserWindow(width=100, height=10)
         with pytest.raises(BrowserSetupError):
-                BrowserWindow(width=10, height=10)
+            BrowserWindow(width=10, height=10)
 
 
 class TestBrowserConfig:
@@ -67,9 +65,7 @@ class TestBrowserConfig:
 
     def test_debug_flag_option(self):
         config = BrowserConfig(
-            running_os=SupportedOS.linux,
-            browser_window=BrowserWindow(),
-            dev_mode=True,
+            running_os=SupportedOS.linux, browser_window=BrowserWindow(), dev_mode=True,
         )
         assert "--auto-open-devtools-for-tabs" in config.default_args()
 
@@ -86,15 +82,15 @@ class TestBrowserConfig:
     def test_chrome_launch_options_defaults(self):
         window = BrowserWindow()
         config = BrowserConfig(
-            running_os=SupportedOS.linux,
-            browser_window=window,
-            dev_mode=True
+            running_os=SupportedOS.linux, browser_window=window, dev_mode=True
         )
         chrome_launch_options = config.chrome_launch_options()
         assert chrome_launch_options["ignoreHTTPSErrors"] == True
         assert chrome_launch_options["userDataDir"] == config.browser_profile_path
         assert chrome_launch_options["ignoreDefaultArgs"] == [
-            "--enable-automation", "--mute-audio", "--hide-scrollbars",
+            "--enable-automation",
+            "--mute-audio",
+            "--hide-scrollbars",
         ]
         assert "executablePath" in chrome_launch_options
         assert chrome_launch_options["defaultViewport"] == window.view_port
@@ -135,7 +131,10 @@ class TestChromeLauncher:
         expected = browser_config.chrome_launch_options()
         assert launcher.chromeExecutable == browser_config.exe_path
         assert launcher.ignoreHTTPSErrors == expected["ignoreHTTPSErrors"]
-        assert f"--user-data-dir={browser_config.browser_profile_path}" in launcher.chromeArguments
+        assert (
+            f"--user-data-dir={browser_config.browser_profile_path}"
+            in launcher.chromeArguments
+        )
         # verify we're omiting the default arguments
         for ignore_arg in expected["ignoreDefaultArgs"]:
             assert ignore_arg not in launcher.chromeArguments

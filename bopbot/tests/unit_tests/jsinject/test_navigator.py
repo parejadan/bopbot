@@ -1,5 +1,3 @@
-import pytest
-
 from bopbot.jsinject.navigator import JS_LIBS, get_default_user_agent
 
 
