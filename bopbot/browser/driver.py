@@ -119,3 +119,24 @@ class PageManager:
             raise PageError(f"Timeout loading {url}")
         except Exception as ex:
             raise PageError(f"While loading [{url}] encountered error{ex}")
+
+    async def set_newpage(self):
+        """
+        Creates a new tab and sets it as the "context" page (self.page)
+        """
+        self.page = await self.browser.newPage()
+        if self.viewport:
+            await self.page.setViewport(self.viewport)
+        await self.sync_request_agent()
+
+    async def set_single_page(self):
+        """
+        Used for making sure the only open page is one we
+        create having the desired dimensions, and js vars
+        """
+        await self.set_newpage()
+        pages = await self.browser.pages()
+        # we assume that whenever a new page is created, it's the last one
+        page_count = len(pages)
+        for cur_pg in range(page_count - 1):
+            await pages[cur_pg].close()
