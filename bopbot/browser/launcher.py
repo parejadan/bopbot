@@ -1,3 +1,4 @@
+import asyncio
 from enum import Enum
 import random
 import os
@@ -102,7 +103,6 @@ class BrowserConfig:
         self,
         running_os: SupportedOS,
         browser_window: BrowserWindow,
-        animation_timeout=5000,
         dev_mode=False,
         native_headless=False,
         xvfb_headless=False,
@@ -112,13 +112,11 @@ class BrowserConfig:
         ==========
         running_os: OS we're executing the bopbot on
         browser_window: browser window dimensions
-        animation_timeout: miliseconds to wait for JS animation to render
         dev_mode: if true, we open browser's JS developer console
         """
         self.running_os = running_os
         self.browser_window = browser_window
         self.exe_path = get_chrome_path(running_os=running_os)
-        self.animation_timeout = animation_timeout
         self.dev_mode = dev_mode
         self.native_headless = native_headless
         self.xvfb_headless = xvfb_headless
