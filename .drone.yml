@@ -1,0 +1,45 @@
+kind: pipeline
+name: bopbot
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: syntax_lint
+  image: python:3.7
+  depends_on: [ clone ]
+  commands:
+    - pip install -r requirements/syntax_lint.txt
+    - flake8
+
+- name: format_lint
+  image: python:3.7
+  depends_on: [ clone ]
+  commands:
+    - pip install -r requirements/format_lint.txt
+    - black bopbot
+
+- name: test_unit
+  image: python:3.7
+  depends_on: [ syntax_lint ]
+  commands:
+    - pip install -r requirements/test.txt
+    - pytest bopbot/tests/unit_tests
+
+- name: test_integration
+  image: beepboppygo/bop-chrome
+  depends_on: [ syntax_lint ]
+  commands:
+    - pip3 install -r requirements/test.txt
+    - pytest bopbot/tests/integration_tests
+  environment:
+    SANDBOX_HOST: sandbox
+
+services:
+- name: sandbox
+  image: node:latest
+  commands:
+    - npm install -g @vue/cli
+    - npm install --prefix sandbox
+    - ./run_sandbox.sh

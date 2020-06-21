@@ -46,9 +46,7 @@ def identify_running_os():
     elif detected_os == "Darwin":
         return SupportedOS.mac
     else:
-        raise BrowserSetupError(
-            f"detected OS {detected_os} is not supported"
-        )
+        raise BrowserSetupError(f"detected OS {detected_os} is not supported")
 
 
 class BrowserWindow:
@@ -117,7 +115,7 @@ class BrowserConfig:
     def __init__(
         self,
         browser_window: BrowserWindow,
-        running_os: SupportedOS=None,
+        running_os: SupportedOS = None,
         devtools=False,
         native_headless=False,
         xvfb_headless=False,

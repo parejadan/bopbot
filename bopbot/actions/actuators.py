@@ -30,9 +30,9 @@ class BaseAction:
             self.driver.page.waitForSelector(
                 selector=elem.to_str(),
                 timeout=self.driver.animation_timeout,
-                options={"visible": as_visible}
+                options={"visible": as_visible},
             )
-        except TimeoutError as ex:
+        except TimeoutError:
             error_msg = "can not find element [{}] {}".format(
                 elem.label, "visible" if as_visible else "even as not visible"
             )
@@ -90,12 +90,9 @@ class BaseAction:
         =======
         True if selector exists in page otherwise False
         """
-        result = False
         try:
-            return await frame.evaluate(
-                f"{elem.to_query()} !== null"
-            )
-        except:
+            return await frame.evaluate(f"{elem.to_query()} !== null")
+        except Exception:
             return False
 
     async def selector_exists(self, elem: LabeledSelector):

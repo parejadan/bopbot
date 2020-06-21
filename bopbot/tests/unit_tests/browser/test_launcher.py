@@ -73,7 +73,9 @@ class TestBrowserConfig:
     def test_creates_browser_data_path(self):
         create_pat_mock = Mock()
         with patch("bopbot.browser.launcher.create_path", create_pat_mock):
-            config = BrowserConfig(running_os=SupportedOS.linux, browser_window=BrowserWindow)
+            config = BrowserConfig(
+                running_os=SupportedOS.linux, browser_window=BrowserWindow
+            )
         create_pat_mock.assert_called_with(path=config.browser_profile_path)
 
     def test_chrome_launch_options_defaults(self):
@@ -95,8 +97,7 @@ class TestBrowserConfig:
         get_chrome_path_mock = Mock()
         with patch("bopbot.browser.launcher.get_chrome_path", get_chrome_path_mock):
             browser_config = BrowserConfig(
-                browser_window=BrowserWindow(),
-                xvfb_headless=True,
+                browser_window=BrowserWindow(), xvfb_headless=True,
             )
             assert detected_os == browser_config.running_os
             get_chrome_path_mock.assert_called_with(running_os=detected_os)
