@@ -7,6 +7,7 @@ from bopbot.browser.launcher import (
     BrowserWindow,
     BrowserConfig,
     ChromeLauncher,
+    identify_running_os,
 )
 from bopbot.browser.exceptions import BrowserSetupError
 
@@ -65,25 +66,19 @@ class TestBrowserConfig:
 
     def test_debug_flag_option(self):
         config = BrowserConfig(
-            running_os=SupportedOS.linux, browser_window=BrowserWindow(), dev_mode=True,
+            running_os=SupportedOS.linux, browser_window=BrowserWindow(), devtools=True,
         )
-        assert "--auto-open-devtools-for-tabs" in config.default_args()
+        assert config.chrome_launch_options()["devtools"] is True
 
     def test_creates_browser_data_path(self):
         create_pat_mock = Mock()
         with patch("bopbot.browser.launcher.create_path", create_pat_mock):
-            config = BrowserConfig(
-                running_os=SupportedOS.linux,
-                browser_window=BrowserWindow,
-                dev_mode=True,
-            )
+            config = BrowserConfig(running_os=SupportedOS.linux, browser_window=BrowserWindow)
         create_pat_mock.assert_called_with(path=config.browser_profile_path)
 
     def test_chrome_launch_options_defaults(self):
         window = BrowserWindow()
-        config = BrowserConfig(
-            running_os=SupportedOS.linux, browser_window=window, dev_mode=True
-        )
+        config = BrowserConfig(running_os=SupportedOS.linux, browser_window=window)
         chrome_launch_options = config.chrome_launch_options()
         assert chrome_launch_options["ignoreHTTPSErrors"] == True
         assert chrome_launch_options["userDataDir"] == config.browser_profile_path
@@ -94,6 +89,17 @@ class TestBrowserConfig:
         ]
         assert "executablePath" in chrome_launch_options
         assert chrome_launch_options["defaultViewport"] == window.view_port
+
+    def test_detect_running_os(self):
+        detected_os = identify_running_os()
+        get_chrome_path_mock = Mock()
+        with patch("bopbot.browser.launcher.get_chrome_path", get_chrome_path_mock):
+            browser_config = BrowserConfig(
+                browser_window=BrowserWindow(),
+                xvfb_headless=True,
+            )
+            assert detected_os == browser_config.running_os
+            get_chrome_path_mock.assert_called_with(running_os=detected_os)
 
 
 class TestChromeLauncher:
@@ -108,6 +114,11 @@ class TestChromeLauncher:
 
         assert "xvfb-run" in launch_cmd
         assert "--headless" not in launch_cmd
+
+    def test_default_loop(self):
+        browser_config = BrowserConfig(browser_window=BrowserWindow())
+        launcher = ChromeLauncher(chrome_config=browser_config)
+        assert launcher._loop is not None
 
     def test_native_headless_launch_cmd(self):
         browser_config = BrowserConfig(
@@ -141,3 +152,16 @@ class TestChromeLauncher:
         # verify the needed arguments are present
         for required_arg in expected["args"]:
             assert required_arg in launcher.chromeArguments
+
+
+class TestIdentifyRunningOS:
+    def test_supported(self):
+        with patch("platform.system", Mock(return_value="Linux")):
+            assert identify_running_os() == SupportedOS.linux
+        with patch("platform.system", Mock(return_value="Darwin")):
+            assert identify_running_os() == SupportedOS.mac
+
+    def test_not_supported(self):
+        with patch("platform.system", Mock(return_value="Windows")):
+            with pytest.raises(BrowserSetupError):
+                identify_running_os()

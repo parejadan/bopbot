@@ -28,6 +28,9 @@ class RawDriver:
         self.user_agent = user_agent if user_agent else get_default_user_agent()
         self.animation_timeout = animation_timeout
         self.pageload_timeout = pageload_timeout
+        self.launcher = None
+        self.browser = None
+        self.page_manager = None
 
     @property
     def page(self):
@@ -35,7 +38,7 @@ class RawDriver:
 
     @property
     def loop(self):
-        return self.launcher.loop
+        return self.launcher._loop
 
     async def get_new_browser(self):
         self.launcher = ChromeLauncher(chrome_config=self.chrome_config)
@@ -43,8 +46,8 @@ class RawDriver:
         self.page_manager = PageManager(
             loop=self.loop,
             browser=self.browser,
-            viewport=self.browser_config.browser_window.view_port,
-            navigator_defaults=self.user_agent,
+            viewport=self.chrome_config.browser_window.view_port,
+            user_agent=self.user_agent,
             timeout=self.pageload_timeout,
         )
         await self.page_manager.set_single_page()
@@ -55,6 +58,9 @@ class RawDriver:
         Navigate to address
         """
         await self.page_manager.goto(url)
+
+    async def close(self):
+        await self.launcher.close_chrome()
 
 
 class PageManager:

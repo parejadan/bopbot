@@ -5,6 +5,7 @@ import os
 import subprocess
 import glob
 import psutil
+import platform
 
 from pyppeteer import launcher
 from pyppeteer.browser import Browser
@@ -36,6 +37,18 @@ def get_chrome_path(running_os: SupportedOS):
         )
 
     return exe_path
+
+
+def identify_running_os():
+    detected_os = platform.system()
+    if detected_os == "Linux":
+        return SupportedOS.linux
+    elif detected_os == "Darwin":
+        return SupportedOS.mac
+    else:
+        raise BrowserSetupError(
+            f"detected OS {detected_os} is not supported"
+        )
 
 
 class BrowserWindow:
@@ -103,9 +116,9 @@ class BrowserWindow:
 class BrowserConfig:
     def __init__(
         self,
-        running_os: SupportedOS,
         browser_window: BrowserWindow,
-        dev_mode=False,
+        running_os: SupportedOS=None,
+        devtools=False,
         native_headless=False,
         xvfb_headless=False,
     ):
@@ -114,12 +127,12 @@ class BrowserConfig:
         ==========
         running_os: OS we're executing the bopbot on
         browser_window: browser window dimensions
-        dev_mode: if true, we open browser's JS developer console
+        devtools: if true, we open browser's JS developer console
         """
-        self.running_os = running_os
+        self.running_os = running_os if running_os else identify_running_os()
         self.browser_window = browser_window
-        self.exe_path = get_chrome_path(running_os=running_os)
-        self.dev_mode = dev_mode
+        self.exe_path = get_chrome_path(running_os=self.running_os)
+        self.devtools = devtools
         self.native_headless = native_headless
         self.xvfb_headless = xvfb_headless
         self.validate_headless()
@@ -157,16 +170,12 @@ class BrowserConfig:
             "--disable-java",
             "--disable-popup-blocking",
             "--disable-prompt-on-repost",
-            "--disable-setuid-sandbox",
             "--disable-sync",
             "--disable-translate",
-            "--disable-web-security",
             "--disable-webgl",
             "--metrics-recording-only",
             "--no-first-run",
             "--safebrowsing-disable-auto-update",
-            "--no-sandbox",
-            "--remote-debugging-port",
             # Automation arguments
             "--password-store=basic",
             "--use-mock-keychain",
@@ -175,8 +184,6 @@ class BrowserConfig:
             "--enable-features=NetworkService",
             self.browser_window.as_arg_option(),
         ]
-        if self.dev_mode:
-            process_args.append("--auto-open-devtools-for-tabs")
 
         return process_args
 
@@ -195,6 +202,8 @@ class BrowserConfig:
             ],
             "executablePath": self.exe_path,
             "defaultViewport": self.browser_window.view_port,
+            "headless": self.native_headless,
+            "devtools": self.devtools,
         }
 
 
@@ -209,7 +218,8 @@ class ChromeLauncher(launcher.Launcher):
         loop: execution loop for chrome to use. If not set, launcher.Launcher creates one
         """
         options = chrome_config.chrome_launch_options()
-        options["loop"] = loop
+        if loop:
+            options["loop"] = loop
         super().__init__(options=options)
         # launcher.Launcher properties
         self.autoClose = False
@@ -238,7 +248,7 @@ class ChromeLauncher(launcher.Launcher):
         else:
             cmd = [self.executable_path]
 
-        return cmd
+        return cmd + self.chromeArguments
 
     async def launch_chrome(self):
         self.chromeClosed = False
@@ -247,13 +257,18 @@ class ChromeLauncher(launcher.Launcher):
             self._launch_cmd(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         # Signal handlers for exits used to be here
-        connectionDelay = self.options.get("slowMo", 0)
-        self.browserWSEndpoint = await self._get_ws_endpoint()
+        connectionDelay = self.slowMo
+        self.browserWSEndpoint = launcher.get_ws_endpoint(self.url)
         self.connection = Connection(
             self.browserWSEndpoint, self._loop, connectionDelay
         )
         return await Browser.create(
-            self.connection, self.options, self.proc, self.kill_chrome
+            connection=self.connection,
+            contextIds=[],
+            ignoreHTTPSErrors=self.ignoreHTTPSErrors,
+            defaultViewport=self.defaultViewport,
+            process=self.proc,
+            closeCallBack=self.killChrome,
         )
 
     def remove_xvfb_lock_file(self):

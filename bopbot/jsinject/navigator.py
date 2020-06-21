@@ -62,5 +62,8 @@ class JSLibs:
     def jquery(self):
         return self.load_lib("jquery-3.3.1.slim.min")
 
+    def clean(self):
+        self._cache = {}
+
 
 JS_LIBS = JSLibs()
