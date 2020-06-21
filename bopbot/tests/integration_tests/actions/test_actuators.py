@@ -10,7 +10,7 @@ SANDBOX_ENDPOINT = "http://localhost:8080/"
 
 
 def get_default_bot():
-    chrome_config = BrowserConfig(browser_window=BrowserWindow(), native_headless=True)
+    chrome_config = BrowserConfig(browser_window=BrowserWindow(), xvfb_headless=True)
     chrome_driver = RawDriver(chrome_config=chrome_config)
     return BaseAction(driver=chrome_driver)
 
