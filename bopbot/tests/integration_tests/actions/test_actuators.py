@@ -1,13 +1,12 @@
 import pytest
-import os
 
 from bopbot.actions.actuators import BaseAction
 from bopbot.browser.driver import RawDriver
 from bopbot.browser.launcher import BrowserConfig, BrowserWindow, SupportedOS
 from bopbot.dom.elements import LabeledSelector
 
-SANDBOX_HOST = os.environ.get("SANDBOX_HOST", "localhost")
-SANDBOX_ENDPOINT = f"http://{SANDBOX_HOST}:8080/"
+
+SANDBOX_ENDPOINT = "http://localhost:8080/"
 
 
 def get_default_bot():

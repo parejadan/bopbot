@@ -31,15 +31,8 @@ steps:
   image: beepboppygo/bop-chrome
   depends_on: [ syntax_lint ]
   commands:
-    - pip3 install -r requirements/test.txt
-    - pytest bopbot/tests/integration_tests
-  environment:
-    SANDBOX_HOST: sandbox
-
-services:
-- name: sandbox
-  image: node:latest
-  commands:
     - npm install -g @vue/cli
     - npm install --prefix sandbox
-    - ./run_sandbox.sh
+    - ./run_sandbox.sh&
+    - pip3 install -r requirements/test.txt
+    - pytest bopbot/tests/integration_tests
