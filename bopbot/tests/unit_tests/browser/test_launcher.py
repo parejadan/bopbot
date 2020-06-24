@@ -64,6 +64,25 @@ class TestBrowserConfig:
         config = BrowserConfig(running_os=SupportedOS.linux, browser_window=window)
         assert window.as_arg_option() in config.default_args()
 
+    def test_default_args_linux(self):
+        """
+        Linux google chrome requires --no-sandbox option if runing as root
+        - by default linux boxes (docker) use root profile when connecting to them
+        """
+        browser_config = BrowserConfig(
+            running_os=SupportedOS.linux, browser_window=BrowserWindow(),
+        )
+        assert "--no-sandbox" in browser_config.default_args()
+
+    def test_default_args_mac(self):
+        """
+        Mac google chrome does not support --no-sandbox option
+        """
+        browser_config = BrowserConfig(
+            running_os=SupportedOS.mac, browser_window=BrowserWindow(),
+        )
+        assert "--no-sandbox" not in browser_config.default_args()
+
     def test_debug_flag_option(self):
         config = BrowserConfig(
             running_os=SupportedOS.linux, browser_window=BrowserWindow(), devtools=True,

@@ -29,7 +29,7 @@ steps:
 
 - name: test_integration
   image: beepboppygo/bop-chrome
-  depends_on: [ syntax_lint ]
+  depends_on: [ syntax_lint, sandbox ]
   commands:
     - pip3 install -r requirements/test.txt
     - pytest bopbot/tests/integration_tests

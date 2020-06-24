@@ -182,6 +182,8 @@ class BrowserConfig:
             "--enable-features=NetworkService",
             self.browser_window.as_arg_option(),
         ]
+        if self.running_os == SupportedOS.linux:
+            process_args.append("--no-sandbox")
 
         return process_args
 
