@@ -24,6 +24,12 @@ steps:
   image: python:3.7
   depends_on: [ syntax_lint ]
   commands:
+    - echo "> Setting up sandbox website"
+    - apt-get update
+    - apt-get install -y nodejs npm
+    - npm install -g @vue/cli
+    - npm install --prefix sandbox
+    - ./run_sandbox.sh&
     - pip install -r requirements/test.txt
     - pytest bopbot/tests/unit_tests
 
@@ -33,13 +39,3 @@ steps:
   commands:
     - pip3 install -r requirements/test.txt
     - pytest bopbot/tests/integration_tests
-  environment:
-    SANDBOX_HOST: sandbox
-
-services:
-- name: sandbox
-  image: node:latest
-  commands:
-    - npm install -g @vue/cli
-    - npm install --prefix sandbox
-    - ./run_sandbox.sh
