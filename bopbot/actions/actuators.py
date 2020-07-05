@@ -1,4 +1,6 @@
+import os
 import asyncio
+from uuid import uuid4
 
 from pyppeteer.errors import TimeoutError
 from pyppeteer.frame_manager import Frame
@@ -118,9 +120,21 @@ class BaseAction:
     async def click_element_handle(self, elem: ElementHandle):
         await elem.click()
 
-    async def type(self, elem: LabeledSelector, text: str, as_visible=True):
-        self.wait_for_element(elem=elem, as_visible=as_visible)
-        await self.driver.page.selector(elem.to_str(), text)
+    async def selector_visible_in_frame(self, frame: Frame, elem: LabeledSelector):
+        return await self.query_frame(frame=frame, elem=elem, attr="style.display != 'none'")
+
+    async def selector_visible(self, elem: LabeledSelector):
+        return await self.selector_visible_in_frame(frame=self.driver.page, elem=elem)
+
+    async def type(self, elem: LabeledSelector, text: str, delay=15):
+        self.wait_for_element(elem=elem, as_visible=True)
+        await self.driver.page.type(
+            selector=elem.to_str(), text=text, options={"delay": delay}
+        )
+
+    async def select(self, elem: LabeledSelector, text: str):
+        self.wait_for_element(elem=elem, as_visible=True)
+        await self.driver.page.select(elem.to_str(), text)
 
     async def sleep_for(self, seconds=2):
         await asyncio.sleep(seconds)
@@ -128,12 +142,11 @@ class BaseAction:
     async def wait_for_navigation(self):
         await self.driver.page.waitForNavigation()
 
-    async def focus(self, elem: LabeledSelector):
-        await self.driver.page.focus(elem.to_str())
-
     async def clear(self, elem: LabeledSelector):
-        await self.focus(elem)
-        await self.driver.page._keyboard.down("Control")
-        await self.driver.page._keyboard.press("KeyA")
-        await self.driver.page._keyboard.up("Control")
-        await self.driver.page._keyboard.press("Backspace")
+        await self.query(elem=elem, attr="value = ''")
+
+    async def screenshot(self, filename: str = None):
+        if not filename:
+            filename = f"{uuid4()}"
+        ouput_path = os.path.join(os.getcwd(), f"{filename}-capture.png")
+        await self.driver.page.screenshot(options={"path": ouput_path})

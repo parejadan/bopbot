@@ -28,12 +28,25 @@
       <li><a href="https://vue-loader.vuejs.org" rel="noopener">vue-loader</a></li>
       <li><a href="https://github.com/vuejs/awesome-vue" rel="noopener">awesome-vue</a></li>
     </ul>
+    <button v-on:click="isHidden = !isHidden">Toggle to hide and show input field</button>
+    <input v-if="!isHidden" type="text" name="random_message">
+    <select name="cars">
+      <option value="volvo">Volvo</option>
+      <option value="saab">Saab</option>
+      <option value="opel">Opel</option>
+      <option value="audi">Audi</option>
+    </select>
   </div>
 </template>
 
 <script>
 export default {
   name: 'HelloWorld',
+  data () {
+    return {
+      isHidden: false
+    }
+  },
   props: {
     msg: String
   }

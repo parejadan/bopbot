@@ -1,5 +1,6 @@
-from uuid import uuid4
+import os
 import pytest
+from uuid import uuid4
 
 from bopbot.actions.actuators import BaseAction
 from bopbot.browser.driver import RawDriver
@@ -56,26 +57,65 @@ class TestBaseAction:
 
     @pytest.mark.asyncio
     @sandbox_exec
-    async def test_click_and_navigate(self, bot):
-        babel_button = LabeledSelector(
-            label="babel",
+    async def test_selector_exists_even_if_hidden(self, bot):
+        hidden_item = LabeledSelector(
+            label="hidden_item",
             dom_hierarchy=[
-                "#app", "div", "ul:nth-child(4)", "li:nth-child(1)", "a"
+                "#app", "div", "ul:nth-child(6)", "li:nth-child(6)"
             ]
         )
-        github_logo = LabeledSelector(
-            label="github_logo",
+        assert await bot.selector_visible(elem=hidden_item) is False
+        assert await bot.selector_exists(elem=hidden_item) is True
+
+    @pytest.mark.asyncio
+    @sandbox_exec
+    async def test_type_and_clear_input(self, bot):
+        random_input = LabeledSelector(
+            label="random_input",
+            dom_hierarchy=["#app", "div", "input[type=text]"],
+        )
+        input_message = "hello world input type"
+        await bot.type(elem=random_input, text=input_message)
+        assert await bot.query(elem=random_input, attr="value") == input_message
+        await bot.clear(elem=random_input)
+        assert await bot.query(elem=random_input, attr="value") == ""
+
+    @pytest.mark.asyncio
+    @sandbox_exec
+    async def test_select_input(self, bot):
+        random_dropdown = LabeledSelector(
+            label="random_dropdown",
+            dom_hierarchy=["#app", "div", "select"]
+        )
+        selected_option = "audi"
+        await bot.select(elem=random_dropdown, text=selected_option)
+        assert await bot.query(elem=random_dropdown, attr="value") == selected_option
+
+    @pytest.mark.asyncio
+    @sandbox_exec
+    async def test_click_hide_show(self, bot):
+        hide_show_button = LabeledSelector(
+            label="hide_show_button",
             dom_hierarchy=[
-                "body",
-                "div.position-relative.js-header-wrapper",
-                "header",
-                "div",
-                "div.d-flex.flex-justify-between.flex-items-center",
-                "a",
-                "svg",
+                ".hello", "button:nth-child(9)"
             ]
         )
-        await bot.click(elem=babel_button)
-        # Assert Failing
-        #await bot.sleep_for(seconds=3)
-        #assert await bot.selector_exists(elem=github_logo) is True
+        random_input = LabeledSelector(
+            label="random_input",
+            dom_hierarchy=["#app", "div", "input[type=text]"],
+        )
+        assert await bot.selector_visible(elem=random_input) is True
+        await bot.click(elem=hide_show_button)
+        assert await bot.selector_exists(elem=random_input) is False
+        await bot.click(elem=hide_show_button)
+        assert await bot.selector_visible(elem=random_input) is True
+
+    @pytest.mark.asyncio
+    @sandbox_exec
+    async def test_screenshot(self, bot):
+        async def screenshot_mock(options):
+            await bot.sleep_for(seconds=1)
+            assert os.getcwd() in options["path"]
+
+        bot.driver.page.screenshot = screenshot_mock
+        await bot.screenshot()

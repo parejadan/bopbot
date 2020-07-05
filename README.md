@@ -31,11 +31,12 @@ apt-get update
 apt-get install -y nodejs npm
 npm install -g @vue/cli
 npm install --prefix sandbox
+
+cd code
 ./run_sandbox.sh&
 
 # 3) install debugging dependencies (base & test packages)
-cd code
-pip3 install requirements/debug.txt
+pip3 install -r requirements/debug.txt
 
 # 4) run tests
 pytest bopbot/tests/integration_tests -s
