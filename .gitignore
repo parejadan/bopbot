@@ -5,3 +5,6 @@ __pycache__/
 .DS_Store
 *.pyc
 browserData/
+dist
+build
+*.egg-info
