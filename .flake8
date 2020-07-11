@@ -1,4 +1,4 @@
 [flake8]
 ignore = F401, E711, E712
 max-line-length = 100
-exclude = .git,__pycache__,.venv, __init__.py
+exclude = .git,__pycache__,.venv, __init__.py, bopbot/jsinject/jslibs.py

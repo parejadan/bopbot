@@ -121,7 +121,9 @@ class BaseAction:
         await elem.click()
 
     async def selector_visible_in_frame(self, frame: Frame, elem: LabeledSelector):
-        return await self.query_frame(frame=frame, elem=elem, attr="style.display != 'none'")
+        return await self.query_frame(
+            frame=frame, elem=elem, attr="style.display != 'none'"
+        )
 
     async def selector_visible(self, elem: LabeledSelector):
         return await self.selector_visible_in_frame(frame=self.driver.page, elem=elem)

@@ -12,7 +12,9 @@ SANDBOX_ENDPOINT = "http://localhost:8080/"
 
 
 def get_default_bot(headless_mode=True):
-    chrome_config = BrowserConfig(browser_window=BrowserWindow(), xvfb_headless=headless_mode)
+    chrome_config = BrowserConfig(
+        browser_window=BrowserWindow(), xvfb_headless=headless_mode
+    )
     chrome_driver = RawDriver(chrome_config=chrome_config)
     return BaseAction(driver=chrome_driver)
 
@@ -31,6 +33,7 @@ def sandbox_exec(test_func):
     sandbox website. This wrapper automatically closes/cleansup
     browser post execution regardless of failure/success
     """
+
     async def exec_wrapper(*args, **kwargs):
         bot = await get_default_bot_on_sandbox()
         try:
@@ -60,9 +63,7 @@ class TestBaseAction:
     async def test_selector_exists_even_if_hidden(self, bot):
         hidden_item = LabeledSelector(
             label="hidden_item",
-            dom_hierarchy=[
-                "#app", "div", "ul:nth-child(6)", "li:nth-child(6)"
-            ]
+            dom_hierarchy=["#app", "div", "ul:nth-child(6)", "li:nth-child(6)"],
         )
         assert await bot.selector_visible(elem=hidden_item) is False
         assert await bot.selector_exists(elem=hidden_item) is True
@@ -71,8 +72,7 @@ class TestBaseAction:
     @sandbox_exec
     async def test_type_and_clear_input(self, bot):
         random_input = LabeledSelector(
-            label="random_input",
-            dom_hierarchy=["#app", "div", "input[type=text]"],
+            label="random_input", dom_hierarchy=["#app", "div", "input[type=text]"],
         )
         input_message = "hello world input type"
         await bot.type(elem=random_input, text=input_message)
@@ -84,8 +84,7 @@ class TestBaseAction:
     @sandbox_exec
     async def test_select_input(self, bot):
         random_dropdown = LabeledSelector(
-            label="random_dropdown",
-            dom_hierarchy=["#app", "div", "select"]
+            label="random_dropdown", dom_hierarchy=["#app", "div", "select"]
         )
         selected_option = "audi"
         await bot.select(elem=random_dropdown, text=selected_option)
@@ -95,14 +94,10 @@ class TestBaseAction:
     @sandbox_exec
     async def test_click_hide_show(self, bot):
         hide_show_button = LabeledSelector(
-            label="hide_show_button",
-            dom_hierarchy=[
-                ".hello", "button:nth-child(9)"
-            ]
+            label="hide_show_button", dom_hierarchy=[".hello", "button:nth-child(9)"]
         )
         random_input = LabeledSelector(
-            label="random_input",
-            dom_hierarchy=["#app", "div", "input[type=text]"],
+            label="random_input", dom_hierarchy=["#app", "div", "input[type=text]"],
         )
         assert await bot.selector_visible(elem=random_input) is True
         await bot.click(elem=hide_show_button)

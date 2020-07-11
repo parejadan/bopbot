@@ -3,7 +3,8 @@ import json
 from user_agent import generate_navigator_js
 
 from bopbot.browser.launcher import BrowserConfig, ChromeLauncher
-from bopbot.jsinject.navigator import get_default_user_agent, JS_LIBS
+from bopbot.jsinject.navigator import get_default_user_agent
+from bopbot.jsinject.jslibs import NAVIGATOR_OVERRIDE, JQUERY_3_3_1
 from bopbot.browser.exceptions import PageError
 
 
@@ -98,7 +99,7 @@ class PageManager:
         dump = json.dumps(self.navigator_config)
         _ = f"const _navigator = {dump};"
 
-        injection = "{\n%s\n%s\n%s}" % (JS_LIBS.jquery, _, JS_LIBS.override)
+        injection = "{\n%s\n%s\n%s}" % (JQUERY_3_3_1, _, NAVIGATOR_OVERRIDE)
         await self.page.evaluateOnNewDocument(f"() => {injection}")
 
         if hard:
