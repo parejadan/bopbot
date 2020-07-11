@@ -9,6 +9,7 @@ from pyppeteer.element_handle import ElementHandle
 from bopbot.dom.elements import LabeledSelector
 from bopbot.browser.driver import RawDriver
 from bopbot.actions.exceptions import ElementNotFoundError
+from bopbot.browser.launcher import BrowserConfig, BrowserWindow
 
 
 class BaseAction:
@@ -152,3 +153,11 @@ class BaseAction:
             filename = f"{uuid4()}"
         ouput_path = os.path.join(os.getcwd(), f"{filename}-capture.png")
         await self.driver.page.screenshot(options={"path": ouput_path})
+
+
+def get_default_bot(headless_mode=True):
+    chrome_config = BrowserConfig(
+        browser_window=BrowserWindow(), xvfb_headless=headless_mode
+    )
+    chrome_driver = RawDriver(chrome_config=chrome_config)
+    return BaseAction(driver=chrome_driver)

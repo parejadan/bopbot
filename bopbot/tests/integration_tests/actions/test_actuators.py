@@ -2,21 +2,11 @@ import os
 import pytest
 from uuid import uuid4
 
-from bopbot.actions.actuators import BaseAction
-from bopbot.browser.driver import RawDriver
-from bopbot.browser.launcher import BrowserConfig, BrowserWindow, SupportedOS
+from bopbot.actions.actuators import get_default_bot
 from bopbot.dom.elements import LabeledSelector
 
 
 SANDBOX_ENDPOINT = "http://localhost:8080/"
-
-
-def get_default_bot(headless_mode=True):
-    chrome_config = BrowserConfig(
-        browser_window=BrowserWindow(), xvfb_headless=headless_mode
-    )
-    chrome_driver = RawDriver(chrome_config=chrome_config)
-    return BaseAction(driver=chrome_driver)
 
 
 async def get_default_bot_on_sandbox():
