@@ -99,7 +99,6 @@ class LabeledSelector(BaseSelector):
         dom_hierarchy: list of HTML/DOM tags in order representing path to selector.
                        Last element assumed to be target dom element.
         """
-        validate_label_name(label=label)
         super().__init__(dom_hierarchy=dom_hierarchy)
         self.label = label
 

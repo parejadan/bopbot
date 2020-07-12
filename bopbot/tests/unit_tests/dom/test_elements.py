@@ -44,12 +44,26 @@ def test_flatten_selector_hierarchy():
     assert expected == selector.to_str()
 
 
-def test_create_labeled_selector_validates():
-    validate_mock = Mock()
-    hierarchy = ["body", "button"]
-    with patch(target="bopbot.dom.elements.validate_dom_hierarchy", new=validate_mock):
-        create_labeled_selector(label="signup_button", selector_hierarchy=hierarchy)
-        validate_mock.assert_called_with(dom_hierarchy=hierarchy)
+class TestCreateLabeledSelector:
+    def test_validates_dom_hierarchy(self):
+        validate_mock = Mock()
+        hierarchy = ["body", "button"]
+        with patch(
+            target="bopbot.dom.elements.validate_dom_hierarchy", new=validate_mock
+        ):
+            create_labeled_selector(label="signup_button", selector_hierarchy=hierarchy)
+            validate_mock.assert_called_with(dom_hierarchy=hierarchy)
+
+    def test_does_not_validate_label(self):
+        validate_mock = Mock()
+        with patch(target="bopbot.dom.elements.validate_label_name", new=validate_mock):
+            create_labeled_selector(
+                label="signup_button", selector_hierarchy=["body", "button"]
+            )
+        failure_msg = (
+            "validate_Label_name should only be called when add_selector_to is called"
+        )
+        assert not validate_mock.called, failure_msg
 
 
 class TestAddSelectorTo:
