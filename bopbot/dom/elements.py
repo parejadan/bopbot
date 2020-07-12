@@ -96,7 +96,6 @@ class LabeledSelector(BaseSelector):
         Parameters
         ==========
         label: Human readable name representation for dom object.
-               Label must be str and only have alphabetical chars after label.replace('_', '').
         dom_hierarchy: list of HTML/DOM tags in order representing path to selector.
                        Last element assumed to be target dom element.
         """
@@ -149,9 +148,11 @@ def add_selector_to(obj, label: str, selector_hierarchy: []):
     and hierarchy, then add obj an attribute named with the passed label value
 
     @obj: object we want to add this selector attribute to
-    @label: camelcase string describing the object the passed dom path hierarchy points to
+    @label: camelcase string describing the object the passed dom path hierarchy points to.
+            - Label must be str and only have alphabetical chars after label.replace('_', '').
     @selector_hierarchy: DOM path that points to selector label describes
     """
+    validate_label_name(label=label)
     selector = create_labeled_selector(
         label=label, selector_hierarchy=selector_hierarchy
     )

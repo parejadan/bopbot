@@ -52,25 +52,21 @@ def test_create_labeled_selector_validates():
         validate_mock.assert_called_with(dom_hierarchy=hierarchy)
 
 
-class TestLabelSelector:
+class TestAddSelectorTo:
     def test_rasies_selector_error_with_invalid_label(self):
         with pytest.raises(SelectorError):
-            LabeledSelector(label=" _catdog", dom_hierarchy=["a"])
+            add_selector_to(obj=self, label=" _catdog", selector_hierarchy=["a"])
 
         with pytest.raises(SelectorError):
-            LabeledSelector(label=" catdog", dom_hierarchy=["a"])
+            add_selector_to(obj=self, label=" catdog", selector_hierarchy=["a"])
 
         with pytest.raises(SelectorError):
-            LabeledSelector(label="cat dog!", dom_hierarchy=["a"])
+            add_selector_to(obj=self, label="cat dog!", selector_hierarchy=["a"])
 
         with pytest.raises(SelectorError):
-            LabeledSelector(label="catdog!", dom_hierarchy=["a"])
+            add_selector_to(obj=self, label="catdog!", selector_hierarchy=["a"])
 
-        selector = LabeledSelector(label="cat_dog", dom_hierarchy=["a"])
-
-        assert validate_label_name(selector.label)
-
-    def test_add_labeled_selector_to(self):
+    def test_selector_added_to_attr(self):
         label_name = "billy_jenkins_selector"
         add_selector_to(self, label=label_name, selector_hierarchy=["a"])
 
