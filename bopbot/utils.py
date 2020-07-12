@@ -64,3 +64,20 @@ def dump_json(data, filename: str = None):
 
     with open(f"{filename}.json", "w") as fl:
         json.dump(data, fl)
+
+
+class EnvReader:
+    @staticmethod
+    def get_bool(key, default=False):
+        try:
+            return os.environ[key].lower() == "true"
+        except KeyError:
+            return default
+
+    @staticmethod
+    def get_str(key, default=""):
+        return os.environ.get(key, default)
+
+    @staticmethod
+    def get_int(key, default=0):
+        return int(os.environ.get(key, default))
