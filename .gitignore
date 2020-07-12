@@ -8,3 +8,5 @@ browserData/
 dist
 build
 *.egg-info
+*.log
+*json
