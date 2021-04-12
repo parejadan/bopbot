@@ -40,6 +40,10 @@ steps:
 - name: pypi_publish
   image: plugins/pypi
   depends_on: [ test_unit ]
+  when:
+    branch:
+      include:
+        - master
   settings:
     username:
       from_secret: pypi_username
