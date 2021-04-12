@@ -27,25 +27,25 @@ steps:
     - pip install -r requirements/test.txt
     - pytest bopbot/tests/unit_tests
 
-#- name: test_integration
-#  image: beepboppygo/bop-chrome
-#  depends_on: [ syntax_lint ]
-#  commands:
-#    - /bin/sh -c hash -d npm
-#    - npm install --prefix sandbox
-#    - ./run_sandbox.sh&
-#    - pip3 install -r requirements/test.txt
-#    - pytest bopbot/tests/integration_tests
+- name: test_integration
+  image: beepboppygo/bop-chrome
+  depends_on: [ syntax_lint ]
+  commands:
+    - /bin/sh -c hash -d npm
+    - npm install --prefix sandbox
+    - ./run_sandbox.sh&
+    - pip3 install -r requirements/test.txt
+    - pytest bopbot/tests/integration_tests
 
-- name: pypi_publish
-  image: plugins/pypi
-  depends_on: [ test_unit ]
-  when:
-    branch:
-      include:
-        - master
-  settings:
-    username:
-      from_secret: pypi_username
-    password:
-      from_secret: pypi_password
+#- name: pypi_publish
+#  image: plugins/pypi
+#  depends_on: [ test_unit ]
+#  when:
+#    branch:
+#      include:
+#        - master
+#  settings:
+#    username:
+#      from_secret: pypi_username
+#    password:
+#      from_secret: pypi_password
